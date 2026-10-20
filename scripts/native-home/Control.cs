@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading;
 class Control {
  const string Operation="http://tizen.org/appcontrol/operation/main";
  const string Target="BadgrFrm01.CleanFrame";
@@ -27,7 +28,15 @@ class Control {
  static void SetString(string key,string value){if(vconf_set_str(key,value)!=0||ReadString(key)!=value)throw new Exception("String write/readback failed: "+key);}
  static void SetAuto(int value){int v;if(vconf_set_int(AutoKey,value)!=0||vconf_get_int(AutoKey,out v)!=0||v!=value)throw new Exception("Autostart write/readback failed");}
  static void SetHome(string value){if(app_operation_set_current_app(Operation,value)!=0||Home()!=value)throw new Exception("Home operation write/readback failed");}
- static void Restore(Snapshot s){SetHome(s.Home);foreach(var k in Keys)SetString(k,s.Strings[k]);SetAuto(s.Autostart);}
+ static bool Matches(Snapshot a,Snapshot b){if(a.Home!=b.Home||a.Autostart!=b.Autostart)return false;foreach(var k in Keys)if(a.Strings[k]!=b.Strings[k])return false;return true;}
+ static void Restore(Snapshot s){
+  SetHome(s.Home);Thread.Sleep(750);
+  for(var attempt=0;attempt<3;attempt++){
+   foreach(var k in Keys)SetString(k,s.Strings[k]);SetAuto(s.Autostart);Thread.Sleep(250);
+   if(Matches(Query(),s))return;
+  }
+  throw new Exception("Exact restore did not remain stable after three attempts");
+ }
  static void CheckSnapshot(Snapshot s){if(s==null||string.IsNullOrWhiteSpace(s.Home)||s.Strings==null||s.Strings.Count!=Keys.Length||(s.Autostart!=0&&s.Autostart!=1))throw new Exception("Invalid original snapshot");foreach(var k in Keys)if(!s.Strings.ContainsKey(k)||string.IsNullOrWhiteSpace(s.Strings[k]))throw new Exception("Missing original setting: "+k);}
  static int Main(string[] args){
   try{
