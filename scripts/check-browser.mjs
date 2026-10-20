@@ -4,16 +4,16 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { openPreview, root } from './browser.mjs';
 
 const KEY = 'cleanframe.home.v1';
-const PRIMARY = ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'];
-const IDS = ['IkWsFHtOY9.Stremio', 'org.tizen.netflix-app', 'MCmYXNxgcu.DisneyPlus', '9Ur5IzDKqV.TizenYouTube', 'com.samsung.tv.aria-video', 'org.tizen.primevideo', 'mWK87Xghap.ABCiview', 'OyE7OuxlUi.SBSOnDemand', 'org.tizen.apple.apple-music'];
-const NAMES = ['Stremio', 'Netflix', 'Disney+', 'YouTube', 'Apple TV', 'Prime Video', 'ABC iview', 'SBS On Demand', 'Apple Music'];
+const PRIMARY = ['jellyfin', 'tizentube', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'];
+const IDS = ['AprZAARz4r.Jellyfin', 'xvvl3S1TT1.TizenTubeStandalone', 'MCmYXNxgcu.DisneyPlus', '9Ur5IzDKqV.TizenYouTube', 'com.samsung.tv.aria-video', 'org.tizen.primevideo', 'mWK87Xghap.ABCiview', 'OyE7OuxlUi.SBSOnDemand', 'org.tizen.apple.apple-music'];
+const NAMES = ['Jellyfin', 'TizenTube', 'Disney+', 'YouTube', 'Apple TV', 'Prime Video', 'ABC iview', 'SBS On Demand', 'Apple Music'];
 const EXTRA = 'AbCdEf1234.FamilyApp', SPOTIFY = 'rJeHak5zRg.Spotify';
 const UNSAFE_NAME = 'Family <img src=x onerror="window.__catalogXss=1"> & TV';
 const CATALOG = IDS.map((id, i) => ({ id, name: NAMES[i], show: true, iconPath: '' })).concat([
   { id: EXTRA, name: UNSAFE_NAME, show: true, iconPath: '' },
   { id: SPOTIFY, name: 'Spotify', show: true, iconPath: '' },
   { id: '5b8c3eb16b.BeamCTVDev', name: 'HBO Max', show: true, iconPath: '' },
-  { id: 'nClrkHome1.FrameHome', name: 'CleanFrame', show: true },
+  { id: 'BadgrFrm01.CleanFrame', name: 'CleanFrame', show: true },
   { id: 'AbCdEf1234.worker', name: 'Background worker', show: true },
   { id: 'com.samsung.tv.cobalt-yt', name: 'YouTube', show: true }
 ]);
@@ -24,7 +24,7 @@ const sourceFiles = ['app/main.js', 'app/device.js', 'app/index.html', 'app/styl
 const hashes = () => Object.fromEntries(sourceFiles.map(f => [f, createHash('sha256').update(readFileSync(root + f)).digest('hex')]));
 const report = { scope: 'Production UI in Chromium; mock public Tizen API only; no TV contacted.', sourceBefore: hashes(), checks: [], failures: [], pageErrors: [], expectedNetworkFailures: [] };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const baseline = (patch = {}) => ({ dock: PRIMARY.slice(), wallpaper: walls[0].id, mode: 'fixed', lastApp: 'netflix', theme: 'shore', ...patch });
+const baseline = (patch = {}) => ({ dock: PRIMARY.slice(), wallpaper: walls[0].id, mode: 'fixed', lastApp: 'tizentube', theme: 'shore', ...patch });
 let preview, current, section = '';
 
 function check(name, pass, detail) {
@@ -202,28 +202,28 @@ try {
   preview = await openPreview();
   await run('Legacy preference migration', async () => {
     for (const theme of ['list', 'shore', 'grid']) {
-      await page({ seed: baseline({ theme, dock: ['youtube', 'netflix'], wallpaper: walls[1].id, lastApp: 'youtube', mode: '15' }) });
+      await page({ seed: baseline({ theme, dock: ['youtube', 'tizentube'], wallpaper: walls[1].id, lastApp: 'youtube', mode: '15' }) });
       const s = await state();
-      check(theme + ' preserves order, wallpaper and rotation', same(s.dock, ['youtube', 'netflix']) && s.wallpaper === walls[1].id && s.mode === '15' && s.lastApp === 'youtube', s);
+      check(theme + ' preserves order, wallpaper and rotation', same(s.dock, ['youtube', 'tizentube']) && s.wallpaper === walls[1].id && s.mode === '15' && s.lastApp === 'youtube', s);
       check(theme + ' maps to intended two-layout appearance', s.look.layout === (theme === 'list' ? 'list' : 'dock') && s.look.bg === (theme === 'list' ? 'dark' : 'photo'), s.look);
       await closePage();
     }
-    await page({ seed: undefined, legacy: baseline({ theme: 'list', dock: ['netflix'], lastApp: 'netflix' }) });
+    await page({ seed: undefined, legacy: baseline({ theme: 'list', dock: ['tizentube'], lastApp: 'tizentube' }) });
     check('Old shore key is read', (await state()).dock.length === 1 && (await state()).look.layout === 'list');
     await look({ controls: 'text' });
-    check('Next completed edit writes stable home key', (await stored()).dock[0] === 'netflix');
+    check('Next completed edit writes stable home key', (await stored()).dock[0] === 'tizentube');
     await current.reload(); await ready();
-    check('Migrated preferences survive reload', (await state()).look.controls === 'text' && (await state()).dock[0] === 'netflix');
+    check('Migrated preferences survive reload', (await state()).look.controls === 'text' && (await state()).dock[0] === 'tizentube');
   });
   await run('Invalid preferences and saved native pins', async () => {
-    await page({ seed: '{broken', legacy: baseline({ dock: ['netflix'], lastApp: 'netflix' }) });
-    check('Malformed primary recovers valid legacy key', same((await state()).dock, ['netflix']));
+    await page({ seed: '{broken', legacy: baseline({ dock: ['tizentube'], lastApp: 'tizentube' }) });
+    check('Malformed primary recovers valid legacy key', same((await state()).dock, ['tizentube']));
     await closePage();
     await page({ seed: { dock: [], wallpaper: 'missing', mode: 'constructor', theme: 'constructor' } });
     const s = await state();
-    check('Invalid values recover usable bounded Home', s.dock.length >= 1 && s.dock.length <= 9 && walls.some(w => w.id === s.wallpaper) && ['fixed', 'open', '5', '15', '60'].includes(s.mode), s);
+    check('Invalid values recover intended default Home', same(s.dock, ['jellyfin', 'tizentube']) && walls.some(w => w.id === s.wallpaper) && ['fixed', 'open', '5', '15', '60'].includes(s.mode), s);
     await closePage();
-    await page({ seed: baseline({ dock: [EXTRA, 'netflix'], lastApp: EXTRA }), catalogFailure: true });
+    await page({ seed: baseline({ dock: [EXTRA, 'tizentube'], lastApp: EXTRA }), catalogFailure: true });
     await library();
     check('Discovery failure preserves saved native pin', (await state()).dock.includes(EXTRA));
   });
@@ -239,11 +239,11 @@ try {
     const names = await current.locator('[data-action^="apps.open."] .label').allTextContents();
     check('Consumer catalogue excludes services, self and duplicate YouTube', names.length === 12 && names.filter(n => n === 'YouTube').length === 1 && !names.includes('CleanFrame') && !names.includes('Background worker'), names);
     check('Installed names stay text, including HTML punctuation', names.includes(UNSAFE_NAME) && !(await current.evaluate(() => window.__catalogXss)));
-    check('Exploration fixtures do not appear', !names.includes('Plex') && !names.includes('Jellyfin'));
+    check('Exploration fixtures do not appear', !names.includes('Plex'));
     await act('apps.open.' + SPOTIFY); await current.waitForFunction(() => __tv.calls.length > 0);
     check('Extra-brand app launches native ID', (await current.evaluate(() => __tv.calls.at(-1))).id === SPOTIFY);
     await current.evaluate(() => window.dispatchEvent(new Event('focus')));
-    await scene('home'); await act('home.app.netflix'); await current.waitForFunction(() => __tv.calls.length === 2);
+    await scene('home'); await act('home.app.tizentube'); await current.waitForFunction(() => __tv.calls.length === 2);
     check('Primary app keeps verified target', (await current.evaluate(() => __tv.calls.at(-1))).id === IDS[1]);
     await current.evaluate(() => window.dispatchEvent(new Event('focus')));
     await act('util.art'); await current.waitForFunction(() => __tv.calls.length === 3);
@@ -256,7 +256,7 @@ try {
     await current.waitForFunction(() => __tv.calls.length === 5);
     check('TV settings keeps installed target', (await current.evaluate(() => __tv.calls.at(-1))).id === 'com.samsung.tv.coba.setting');
     await current.evaluate(() => { window.dispatchEvent(new Event('focus')); __tv.launchFailure = true; });
-    await scene('home'); await act('home.app.netflix'); await current.waitForFunction(() => ShoreQA.where().view === 'message');
+    await scene('home'); await act('home.app.tizentube'); await current.waitForFunction(() => ShoreQA.where().view === 'message');
     check('Launch failure is shown', /could not|unavailable|try again/i.test(await current.locator('#stage').innerText()));
   });
   await run('Catalogue failure and retry', async () => {
@@ -294,18 +294,18 @@ try {
   await run('Immediate edits, undo, move cancellation and limits', async () => {
     await page(); await editor();
     const start = (await state()).dock;
-    await remove('netflix');
-    check('Remove persists membership and keeps installation', !(await stored()).dock.includes('netflix') && (await current.evaluate(() => __tv.catalog.some(a => a.id === 'org.tizen.netflix-app'))));
-    check('Focus follows removal into addable apps', (await state()).focusAction === 'editor.add.netflix', (await state()).focusAction);
+    await remove('tizentube');
+    check('Remove persists membership and keeps installation', !(await stored()).dock.includes('tizentube') && (await current.evaluate(() => __tv.catalog.some(a => a.id === 'xvvl3S1TT1.TizenTubeStandalone'))));
+    check('Focus follows removal into addable apps', (await state()).focusAction === 'editor.add.tizentube', (await state()).focusAction);
     await nav('ok'); check('Second OK restores same position', same((await stored()).dock, start));
-    await remove('netflix'); await act('editor.undo'); check('Undo persists previous membership', same((await stored()).dock, start));
-    await act('editor.move.netflix'); await nav('down'); check('Unfinished move does not write', same((await stored()).dock, start));
+    await remove('tizentube'); await act('editor.undo'); check('Undo persists previous membership', same((await stored()).dock, start));
+    await act('editor.move.tizentube'); await nav('down'); check('Unfinished move does not write', same((await stored()).dock, start));
     await nav('back'); check('Back cancels unfinished move', same((await state()).dock, start));
-    await act('editor.move.netflix'); await nav('down', 'ok');
+    await act('editor.move.tizentube'); await nav('down', 'ok');
     const moved = start.slice(); [moved[1], moved[2]] = [moved[2], moved[1]];
     check('Placed move persists immediately', same((await stored()).dock, moved));
     await act('editor.add.' + EXTRA); check('Nine-app cap prevents addition', (await state()).dock.length === 9 && !(await state()).dock.includes(EXTRA));
-    await remove('stremio'); await act('editor.add.' + EXTRA);
+    await remove('jellyfin'); await act('editor.add.' + EXTRA);
     check('Native app can be pinned with stable ID', (await stored()).dock.includes(EXTRA) && (await state()).dock.length === 9);
     check('Native pin retains readable metadata for failed discovery', (await stored()).appRecords.some(a => a.id === EXTRA && a.name === UNSAFE_NAME));
     await current.reload(); await ready(); check('Native pin survives reload', (await state()).dock.includes(EXTRA));
@@ -316,11 +316,11 @@ try {
   });
   await run('Actual storage failures are atomic', async () => {
     await page(); await editor(); const before = await stored();
-    await current.evaluate(() => { window.__failWrites = true; }); await remove('netflix');
+    await current.evaluate(() => { window.__failWrites = true; }); await remove('tizentube');
     check('Failed removal changes neither committed state nor storage', same((await state()).dock, before.dock) && same(await stored(), before));
     check('Failed write gives visible feedback', /not saved|couldn.t save|tries again/i.test(await current.locator('#stage').innerText()));
     await current.evaluate(() => { window.__failWrites = false; }); await nav('ok');
-    check('Retry commits through same action', !(await stored()).dock.includes('netflix'));
+    check('Retry commits through same action', !(await stored()).dock.includes('tizentube'));
     await scene('home'); const old = await state(), oldStored = await stored();
     await current.evaluate(() => { window.__failWrites = true; }); await call('look', { bg: old.look.bg === 'light' ? 'dark' : 'light' });
     await current.waitForFunction(() => !ShoreQA.state().pending);
@@ -806,9 +806,9 @@ try {
     check('A missing thumbnail does not prevent applying its full photo', (await state()).committed.wall === target.id && Object.values(await wallpaperBundle()).every(src => src.includes('/' + target.id)));
   });
   await run('Physical-key repeats and Back hierarchy', async () => {
-    await page(); await editor(); await remove('netflix');
+    await page(); await editor(); await remove('tizentube');
     await current.keyboard.down('Enter'); await current.keyboard.down('Enter');
-    check('Held OK restores once without removing again', (await state()).dock.includes('netflix') && (await state()).dock.length === 9);
+    check('Held OK restores once without removing again', (await state()).dock.includes('tizentube') && (await state()).dock.length === 9);
     await current.keyboard.up('Enter');
     await current.keyboard.down('Escape'); await current.keyboard.down('Escape');
     check('Held Back closes one layer only', (await call('where')).view === 'settings' && (await state()).focusAction === 'settings.editor');
@@ -845,7 +845,7 @@ try {
     check('Warm return does not repeat open rotation', (await state()).wallpaper === first);
     await current.reload(); await ready(); check('Next cold start advances again', (await state()).wallpaper === walls[2].id);
     await closePage();
-    await page({ mock: false }); await act('home.app.netflix'); await current.waitForFunction(() => ShoreQA.where().view === 'message');
+    await page({ mock: false }); await act('home.app.tizentube'); await current.waitForFunction(() => ShoreQA.where().view === 'message');
     check('Browser launch honestly requires TV', /TV/.test(await current.locator('#stage').innerText()));
     await nav('back'); await library();
     check('Browser All Apps has no installed fixtures', /TV/.test(await current.locator('#stage').innerText()) && !(await current.locator('[data-action^="apps.open."]').count()));

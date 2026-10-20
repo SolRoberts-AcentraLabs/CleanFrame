@@ -85,7 +85,7 @@ try {
   page.on('requestfailed', request => { if (!page.__closing && request.failure()?.errorText !== 'net::ERR_ABORTED') report.errors.push(request.failure()?.errorText + ' ' + request.url()); });
   await page.addInitScript(() => {
     const primary = [
-      ['IkWsFHtOY9.Stremio', 'Stremio'], ['org.tizen.netflix-app', 'Netflix'], ['MCmYXNxgcu.DisneyPlus', 'Disney+'],
+      ['AprZAARz4r.Jellyfin', 'Jellyfin'], ['xvvl3S1TT1.TizenTubeStandalone', 'TizenTube'], ['MCmYXNxgcu.DisneyPlus', 'Disney+'],
       ['9Ur5IzDKqV.TizenYouTube', 'YouTube'], ['com.samsung.tv.aria-video', 'Apple TV'], ['org.tizen.primevideo', 'Prime Video'],
       ['mWK87Xghap.ABCiview', 'ABC iview'], ['OyE7OuxlUi.SBSOnDemand', 'SBS On Demand'], ['org.tizen.apple.apple-music', 'Apple Music']
     ];
@@ -95,7 +95,7 @@ try {
       getAppsInfo(ok) { setTimeout(() => ok(catalogue), 0); },
       launch(id, ok) { setTimeout(ok, 0); }
     } };
-    localStorage.setItem('cleanframe.home.v1', JSON.stringify({ dock: ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'], wallpaper: 'misty', mode: 'fixed', theme: 'shore', lastApp: 'netflix' }));
+    localStorage.setItem('cleanframe.home.v1', JSON.stringify({ dock: ['jellyfin', 'tizentube', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'], wallpaper: 'misty', mode: 'fixed', theme: 'shore', lastApp: 'tizentube' }));
   });
   cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
@@ -120,7 +120,7 @@ try {
   await sample('All Apps grid navigation', ['down', 'down', 'right', 'up', 'up', 'left']);
   await scene('editor');
   await sample('Apps on Home navigation', ['down', 'down', 'down', 'up', 'up', 'up']);
-  await call('activate', 'editor.move.netflix');
+  await call('activate', 'editor.move.tizentube');
   await sample('Picked-up app movement', ['down', 'up'], 6);
   await call('nav', 'back');
   await scene('appearance');

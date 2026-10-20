@@ -12,7 +12,15 @@ I highly recommend forking it and building on top of it, ideally with a coding a
 
 ## Try the interface
 
-You need Node.js 22+ and Python 3.10+ to run the browser preview.
+The Nix development shell includes Node.js, npm, Python and the Chromium build used by Playwright:
+
+```sh
+nix develop
+npm ci
+npm run dev:public
+```
+
+Without Nix, you need Node.js 22+, Python 3.10+ and a Playwright Chromium installation.
 
 ```sh
 git clone https://github.com/nthnclrk/CleanFrame.git
@@ -76,6 +84,8 @@ CLEANFRAME_PUBLIC_FONTS=1 npm run check:browser
 npm run check:public
 npm run export:public
 ```
+
+Inside `nix develop`, Chromium is supplied by the flake and does not need a separate download.
 
 The browser checks use isolated Chromium profiles and a loopback preview. They never contact a TV. The public export creates `dist/CleanFrame-public-unsigned.wgt`, with public fonts and notices. It needs your own identity and signing before installation. It does not certify asset redistribution rights or device compatibility.
 
