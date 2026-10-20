@@ -1,4 +1,6 @@
 {
+  "jellyfin": "https://raw.githubusercontent.com/simple-icons/simple-icons/4d29a35c954699b389a834aacc97dd6e7e74143c/icons/jellyfin.svg",
+  "tizentube": "CleanFrame adaptation of the pinned Simple Icons YouTube mark already included as youtube.svg; label identifies the TizenTube client",
   "stremio": "https://raw.githubusercontent.com/simple-icons/simple-icons/4d29a35c954699b389a834aacc97dd6e7e74143c/icons/stremio.svg",
   "netflix": "https://raw.githubusercontent.com/simple-icons/simple-icons/4d29a35c954699b389a834aacc97dd6e7e74143c/icons/netflix.svg",
   "youtube": "https://raw.githubusercontent.com/simple-icons/simple-icons/4d29a35c954699b389a834aacc97dd6e7e74143c/icons/youtube.svg",

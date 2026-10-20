@@ -14,8 +14,8 @@
   var FULL = 'Home holds nine apps. Remove one first.', LAST = 'Home needs one app';
 
   var PRIMARY_APPS = [
-    { id: 'jellyfin', name: 'Jellyfin', mark: false, appId: 'AprZAARz4r.Jellyfin' },
-    { id: 'tizentube', name: 'TizenTube', mark: false, appId: 'xvvl3S1TT1.TizenTubeStandalone' },
+    { id: 'jellyfin', name: 'Jellyfin', mark: true, appId: 'AprZAARz4r.Jellyfin' },
+    { id: 'tizentube', name: 'TizenTube', mark: true, appId: 'xvvl3S1TT1.TizenTubeStandalone' },
     { id: 'disneyplus', name: 'Disney+', mark: true, appId: 'MCmYXNxgcu.DisneyPlus' },
     { id: 'youtube', name: 'YouTube', mark: true, appId: '9Ur5IzDKqV.TizenYouTube' },
     { id: 'appletv', name: 'Apple TV', mark: true, appId: 'com.samsung.tv.aria-video' },
@@ -479,8 +479,7 @@
         if (!safeId(id) || !safeId(entry.appId) || ALPHA.indexOf(id) >= 0) return;
         a = app(id);
         if (!a) { a = { id: id }; APPS.push(a); }
-        a.appId = entry.appId; a.brand = entry.brand || '';
-        a.mark = !!entry.brand && ['jellyfin', 'tizentube'].indexOf(entry.brand) < 0;
+        a.appId = entry.appId; a.brand = entry.brand || ''; a.mark = !!entry.brand;
         a.icon = safeIcon(entry.icon);
         a.name = PRIMARY.indexOf(id) >= 0 ? PRIMARY_APPS[PRIMARY.indexOf(id)].name : String(entry.name).slice(0, 160);
         ALPHA.push(id);

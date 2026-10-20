@@ -5,8 +5,8 @@ mode=sys.argv[1] if len(sys.argv)>1 else 'query'
 if mode not in ['query','apply','restore','inspect']:raise SystemExit('Unknown action')
 host=json.loads((r/'.local/device.json').read_text())['host'];ipaddress.ip_address(host)
 with urllib.request.urlopen('http://'+host+':8001/api/v2/',timeout=4) as response: info=json.load(response)
-if info.get('device',{}).get('modelName')!='QA55LS03DAWXXY':raise SystemExit('Model guard failed; nothing staged.')
-sdb=str(r/'.local/tizen-sdk/tools/sdb');serial=host+':26101'
+if info.get('device',{}).get('modelName')!='QN75LS03DDFXZA':raise SystemExit('Model guard failed; nothing staged.')
+sdb=os.environ.get('CLEANFRAME_SDB',str(r/'.local/tizen-sdk/tools/sdb'));serial=host+':26101'
 def run(args,timeout=12):
  p=subprocess.run([sdb,*args],capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError('SDB transport failed: '+p.stdout[-300:]+p.stderr[-300:])
@@ -23,7 +23,7 @@ run(['-s',serial,'push',str(r/'scripts/native-home'/(mode+'.sh')),remote])
 with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as route:
  route.connect((host,9));local=route.getsockname()[0]
 with socket.socket() as listener:
- listener.bind((local,0));listener.listen(1);listener.settimeout(18);port=listener.getsockname()[1]
+ listener.bind((local,int(os.environ.get('CLEANFRAME_CALLBACK_PORT','0'))));listener.listen(1);listener.settimeout(18);port=listener.getsockname()[1]
  command='exec 3<>/dev/tcp/'+local+'/'+str(port)+';cat '+remote+'|bash >&3 2>&3;exec 3>&-'
  script='/bin/mkdir /tmp/s-'+token+' 2>/dev/null&&{ '+command+';}'
  encoded=base64.b64encode(script.encode()).decode()
@@ -48,6 +48,13 @@ with socket.socket() as listener:
   (d/(mode+'-output.txt')).write_text(output)
   (d/(mode+'-transport.json')).write_text(json.dumps({'returncode':proc.returncode,'stdout':stdout,'stderr':stderr,'remote_probe':remote,'time':time.time()},indent=2))
   if 'CLEANFRAME_HOME_INSPECT_BEGIN' not in output or 'CLEANFRAME_HOME_INSPECT_END' not in output:raise RuntimeError('Probe incomplete; device state is unknown. Inspect current values before retrying.')
+  if mode=='query' and not (d/'original.json').exists():
+   marker='CLEANFRAME_HOME_JSON='
+   line=next((line for line in output.splitlines() if line.startswith(marker)),None)
+   if not line:raise RuntimeError('Home query returned no recovery snapshot.')
+   snapshot=json.loads(line[len(marker):])
+   (d/'original.json').write_text(json.dumps(snapshot,indent=2)+'\n')
+   print('Saved recovery baseline to '+str(d/'original.json'))
   print(output)
  finally:
   if proc.poll() is None:proc.terminate();proc.communicate(timeout=3)

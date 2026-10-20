@@ -15,6 +15,7 @@
             packages = with pkgs; [
               nodejs_22
               python3
+              dotnet-sdk_8
               playwright-driver
               playwright-driver.browsers
             ];
